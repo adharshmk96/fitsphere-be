@@ -3,7 +3,7 @@ module github.com/adharshmk96/fitsphere-be/apps/user
 go 1.20
 
 require (
-	github.com/adharshmk96/fitsphere-be/libs v0.0.0-20230405172311-7fe531408427
+	github.com/adharshmk96/fitsphere-be/libs v0.0.0-20230412161527-1cee2cffd000
 	github.com/gorilla/mux v1.8.0
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/stretchr/testify v1.8.1
@@ -24,9 +24,10 @@ require (
 	github.com/stretchr/objx v0.5.0 // indirect
 	go.uber.org/atomic v1.6.0 // indirect
 	go.uber.org/multierr v1.5.0 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/lint v0.0.0-20190930215403-16217165b5de // indirect
-	golang.org/x/text v0.7.0 // indirect
-	golang.org/x/tools v0.1.12 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/tools v0.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

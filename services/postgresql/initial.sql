@@ -1,6 +1,0 @@
-CREATE TABLE fitsphere_system_db_migrations (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
