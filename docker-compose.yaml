@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  fitsphere_user_api:
+    container_name: fitsphere_user_api
+    image: fitsphere_user_api
+    build:
+      context: ./apps/user
+      dockerfile: Dockerfile
+    env_file:
+      - ./environment/user/server.env
+    depends_on:
+      - fitsphere_user_db
+    ports:
+      - "8080:8080"
+    restart: always
+
+  fitsphere_user_db:
+    container_name: fitsphere_user_db
+    image: fitsphere_pg
+    build:
+      context: ./services/postgresql
+      dockerfile: Dockerfile
+    env_file:
+      - ./environment/user/postgres.env
+    volumes:
+      - fitsphere-pg-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+  
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+
+volumes:
+  fitsphere-pg-data:
