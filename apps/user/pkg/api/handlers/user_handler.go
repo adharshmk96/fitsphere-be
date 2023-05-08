@@ -1,168 +1,121 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/entities"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/interfaces"
-	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/logging"
+	"github.com/adharshmk96/fitsphere-be/libs/stk"
 	"go.uber.org/zap"
-
-	"github.com/gorilla/mux"
 )
 
 type UserHandler struct {
 	service interfaces.UserService
-	logger  *zap.Logger
 }
 
 func NewUserHandler(service interfaces.UserService) *UserHandler {
-	logger := logging.GetLogger()
 	return &UserHandler{
 		service: service,
-		logger:  logger,
 	}
 }
 
-func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-
-	h.logger.Info("Incoming request",
-		zap.String("method", r.Method),
-		zap.String("url", r.URL.String()),
-	)
-
+func (h *UserHandler) GetAllUsers(c *stk.Context) {
 	users, err := h.service.GetAllUsers()
 	if err != nil {
-		h.logger.Error("Error getting all users", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.Logger.Error("Error getting all users", zap.Error(err))
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		c.Writer.Write([]byte(err.Error()))
 		return
 	}
 
-	h.logger.Info("Returning all users")
-	response, _ := json.Marshal(users)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	c.Logger.Info("Returning all users")
+	c.Status(http.StatusOK).JSONResponse(users)
 }
+func (h *UserHandler) GetUserByID(c *stk.Context) {
 
-func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
-
-	h.logger.Info("Incoming request",
-		zap.String("method", r.Method),
-		zap.String("url", r.URL.String()),
-	)
-
-	idStr := mux.Vars(r)["id"]
+	idStr := c.GetParam("id")
 	id, err := entities.ParseUserID(idStr)
 	if err != nil {
-		h.logger.Error("Error parsing user ID", zap.Error(err))
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		c.Logger.Error("Error parsing user ID", zap.Error(err))
+		c.Status(http.StatusBadRequest).JSONResponse(err.Error())
 		return
 	}
 
 	user, err := h.service.GetUserByID(id)
 	if err != nil {
-		h.logger.Error("Error getting user by ID", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.Logger.Error("Error getting user by ID", zap.Error(err))
+		c.Status(http.StatusInternalServerError).JSONResponse(err.Error())
 		return
 	}
 
-	response, _ := json.Marshal(user)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	c.Status(http.StatusOK).JSONResponse(user)
 }
 
-func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-
-	h.logger.Info("Incoming request",
-		zap.String("method", r.Method),
-		zap.String("url", r.URL.String()),
-	)
+func (h *UserHandler) CreateUser(c *stk.Context) {
 
 	var user entities.UserAccount_Internal
-	err := json.NewDecoder(r.Body).Decode(&user)
+	err := c.DecodeJSONBody(&user)
 	if err != nil {
-		h.logger.Error("Error decoding request body", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		c.Logger.Error("Error decoding request body", zap.Error(err))
+		c.Status(http.StatusBadRequest).JSONResponse(err.Error())
 		return
 	}
-	defer r.Body.Close()
 
 	err = user.ValidateData()
 	if err != nil {
-		h.logger.Error("Error validating user", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		c.Logger.Error("Error validating user", zap.Error(err))
+		c.Status(http.StatusBadRequest).JSONResponse(err.Error())
 		return
 	}
 
 	err = h.service.CreateUser(&user)
 	if err != nil {
-		h.logger.Error("Error creating user", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.Logger.Error("Error creating user", zap.Error(err))
+		c.Status(http.StatusInternalServerError).JSONResponse(err.Error())
 		return
 	}
 
-	response, _ := json.Marshal(user)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(response)
+	c.Status(http.StatusOK).JSONResponse(user)
 }
 
-func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-
-	h.logger.Info("Incoming request",
-		zap.String("method", r.Method),
-		zap.String("url", r.URL.String()),
-	)
+func (h *UserHandler) UpdateUser(c *stk.Context) {
 
 	var user entities.UserAccount
-	err := json.NewDecoder(r.Body).Decode(&user)
+	err := c.DecodeJSONBody(&user)
 	if err != nil {
-		h.logger.Error("Error decoding request body", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		c.Logger.Error("Error decoding request body", zap.Error(err))
+		c.Status(http.StatusBadRequest).JSONResponse(err.Error())
 		return
 	}
-	defer r.Body.Close()
 
 	err = h.service.UpdateUser(&user)
 	if err != nil {
-		h.logger.Error("Error updating user", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.Logger.Error("Error updating user", zap.Error(err))
+		c.Status(http.StatusInternalServerError).JSONResponse(err.Error())
 		return
 	}
 
-	response, _ := json.Marshal(user)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(response)
+	c.Status(http.StatusCreated).JSONResponse(user)
 }
 
-func (h *UserHandler) DeleteUserByID(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) DeleteUserByID(c *stk.Context) {
 
-	h.logger.Info("Incoming request",
-		zap.String("method", r.Method),
-		zap.String("url", r.URL.String()),
-	)
-
-	idStr := mux.Vars(r)["id"]
+	idStr := c.GetParam("id")
 
 	id, err := entities.ParseUserID(idStr)
 	if err != nil {
-		h.logger.Error("Error parsing user ID", zap.Error(err))
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		c.Logger.Error("Error parsing user ID", zap.Error(err))
+		c.Status(http.StatusBadRequest).JSONResponse(err.Error())
 		return
 	}
 
 	err = h.service.DeleteUserByID(id)
 	if err != nil {
-		h.logger.Error("Error deleting user by ID", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.Logger.Error("Error deleting user by ID", zap.Error(err))
+		c.Status(http.StatusInternalServerError).JSONResponse(err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNoContent)
+	c.Status(http.StatusNoContent).JSONResponse(nil)
 
 }

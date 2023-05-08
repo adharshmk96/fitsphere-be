@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/api"
-	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/logging"
+	"github.com/adharshmk96/fitsphere-be/libs/stk/stk_logging"
 )
 
 func main() {
-	logger := logging.GetLogger()
+	logger := stk_logging.GetLogger()
 	server, err := api.NewServer(logger)
 
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error starting server: %s", err.Error()))
 	}
 
-	server.Run()
+	server.Start()
 }
