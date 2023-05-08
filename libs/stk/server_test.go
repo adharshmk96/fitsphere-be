@@ -15,7 +15,12 @@ import (
 // Test server routes
 
 func TestServerRoutes(t *testing.T) {
-	s := stk.NewServer()
+	config := &stk.ServerConfig{
+		Port:           "8080",
+		RequestLogging: true,
+		CORS:           true,
+	}
+	s := stk.NewServer(config)
 
 	sampleHandler := func(ctx *stk.Context) {
 		method := ctx.Request.Method
@@ -29,185 +34,74 @@ func TestServerRoutes(t *testing.T) {
 	s.Delete("/test-delete", sampleHandler)
 	s.Patch("/test-patch", sampleHandler)
 
-	paramsHandler := func(ctx *stk.Context) {
-		params := ctx.Params
+	queryParamHandler := func(ctx *stk.Context) {
 		ctx.Writer.WriteHeader(200)
-		ctx.Writer.Write([]byte(params.ByName("id")))
+		ctx.Writer.Write([]byte(ctx.GetQueryParam("name")))
 	}
 
-	s.Get("/test/:id", paramsHandler)
-	s.Post("/test/:id", paramsHandler)
-	s.Put("/test/:id", paramsHandler)
-	s.Delete("/test/:id", paramsHandler)
-	s.Patch("/test/:id", paramsHandler)
+	s.Get("/test/p", queryParamHandler)
+	s.Post("/test/p", queryParamHandler)
+	s.Put("/test/p", queryParamHandler)
+	s.Delete("/test/p", queryParamHandler)
+	s.Patch("/test/p", queryParamHandler)
+
+	paramsHandler := func(ctx *stk.Context) {
+		ctx.Writer.WriteHeader(200)
+		ctx.Writer.Write([]byte(ctx.GetParam("id")))
+	}
+
+	s.Get("/test/d/:id", paramsHandler)
+	s.Post("/test/d/:id", paramsHandler)
+	s.Put("/test/d/:id", paramsHandler)
+	s.Delete("/test/d/:id", paramsHandler)
+	s.Patch("/test/d/:id", paramsHandler)
 
 	serverHandler := http.HandlerFunc(s.Router.ServeHTTP)
 
-	t.Run("testing GET", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/test-get", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
+	testCases := []struct {
+		name       string
+		method     string
+		path       string
+		statusCode int
+		expected   string
+	}{
+		{name: "testing get for 200", method: http.MethodGet, path: "/test-get", statusCode: http.StatusOK, expected: "GET"},
+		{name: "testing post for 200", method: http.MethodPost, path: "/test-post", statusCode: http.StatusOK, expected: "POST"},
+		{name: "testing put for 200", method: http.MethodPut, path: "/test-put", statusCode: http.StatusOK, expected: "PUT"},
+		{name: "testing delete for 200", method: http.MethodDelete, path: "/test-delete", statusCode: http.StatusOK, expected: "DELETE"},
+		{name: "testing patch for 200", method: http.MethodPatch, path: "/test-patch", statusCode: http.StatusOK, expected: "PATCH"},
 
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "GET", string(body))
-	})
+		{name: "testing get with dynamic route", method: http.MethodGet, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
+		{name: "testing post with dynamic route", method: http.MethodPost, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
+		{name: "testing put with dynamic route", method: http.MethodPut, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
+		{name: "testing delete with dynamic route", method: http.MethodDelete, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
+		{name: "testing patch with dynamic route", method: http.MethodPatch, path: "/test/d/123", statusCode: http.StatusOK, expected: "123"},
 
-	t.Run("testing POST", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/test-post", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
+		{name: "testing get with param name=adha", method: http.MethodGet, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
+		{name: "testing post with param name=adha", method: http.MethodPost, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
+		{name: "testing put with param name=adha", method: http.MethodPut, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
+		{name: "testing delete with param name=adha", method: http.MethodDelete, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
+		{name: "testing patch with param name=adha", method: http.MethodPatch, path: "/test/p?name=adha", statusCode: http.StatusOK, expected: "adha"},
 
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "POST", string(body))
-	})
+		{name: "testing GET route with POST method should return method not allowed 405", method: http.MethodPost, path: "/test-get", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "testing POST route with GET method should return method not allowed 405", method: http.MethodGet, path: "/test-post", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "testing PUT route with POST method should return method not allowed 405", method: http.MethodPost, path: "/test-put", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "testing DELETE route with GET method should return method not allowed 405", method: http.MethodGet, path: "/test-delete", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+		{name: "testing PATCH route with PUT method should return method not allowed 405", method: http.MethodPut, path: "/test-patch", statusCode: http.StatusMethodNotAllowed, expected: "Method Not Allowed\n"},
+	}
 
-	t.Run("testing PUT", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/test-put", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
+	for _, test := range testCases {
+		t.Run("testing "+test.method+" with path "+test.path, func(t *testing.T) {
+			req := httptest.NewRequest(test.method, test.path, nil)
+			rr := httptest.NewRecorder()
+			serverHandler.ServeHTTP(rr, req)
 
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "PUT", string(body))
-	})
-
-	t.Run("testing DELETE", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/test-delete", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "DELETE", string(body))
-	})
-
-	t.Run("testing PATCH", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPatch, "/test-patch", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "PATCH", string(body))
-	})
-
-	t.Run("testing GET with params returning the param", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/test/123", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "123", string(body))
-	})
-
-	t.Run("testing POST with params returning the param", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/test/123", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "123", string(body))
-	})
-
-	t.Run("testing PUT with params returning the param", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/test/123", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "123", string(body))
-	})
-
-	t.Run("testing DELETE with params returning the param", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/test/123", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "123", string(body))
-	})
-
-	t.Run("testing PATCH with params returning the param", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPatch, "/test/123", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "123", string(body))
-	})
-
-	t.Run("testing GET route with POST method should return method not allowed 405", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/test-get", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
-		assert.Equal(t, "Method Not Allowed\n", string(body))
-	})
-
-	t.Run("testing POST route with GET method should return method not allowed 405", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/test-post", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
-		assert.Equal(t, "Method Not Allowed\n", string(body))
-	})
-
-	t.Run("testing PUT route with POST method should return method not allowed 405", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/test-put", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
-		assert.Equal(t, "Method Not Allowed\n", string(body))
-	})
-
-	t.Run("testing DELETE route with GET method should return method not allowed 405", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/test-delete", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
-		assert.Equal(t, "Method Not Allowed\n", string(body))
-	})
-
-	t.Run("testing PATCH route with PUT method should return method not allowed 405", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/test-patch", nil)
-		rr := httptest.NewRecorder()
-		serverHandler.ServeHTTP(rr, req)
-
-		res := rr.Result()
-		body, _ := ioutil.ReadAll(res.Body)
-		assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
-		assert.Equal(t, "Method Not Allowed\n", string(body))
-	})
-
+			res := rr.Result()
+			body, _ := ioutil.ReadAll(res.Body)
+			assert.Equal(t, test.statusCode, res.StatusCode)
+			assert.Equal(t, test.expected, string(body))
+		})
+	}
 }
 
 // Test middlewares
@@ -233,7 +127,12 @@ func TestMiddlewares(t *testing.T) {
 	}
 
 	t.Run("server with two middlewares", func(t *testing.T) {
-		s := stk.NewServer()
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: true,
+			CORS:           true,
+		}
+		s := stk.NewServer(config)
 
 		s.Use(firstMiddleware)
 		s.Use(secondMiddleware)
@@ -260,7 +159,13 @@ func TestMiddlewares(t *testing.T) {
 	})
 
 	t.Run("server with no middlewares", func(t *testing.T) {
-		s := stk.NewServer()
+		config := &stk.ServerConfig{
+			Port:           "8080",
+			RequestLogging: true,
+			CORS:           true,
+		}
+		s := stk.NewServer(config)
+
 		s.Get("/", myHandler)
 
 		req := httptest.NewRequest("GET", "/", nil)
