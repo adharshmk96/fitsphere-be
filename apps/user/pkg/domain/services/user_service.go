@@ -3,7 +3,7 @@ package services
 import (
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/entities"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/interfaces"
-	"github.com/adharshmk96/fitsphere-be/libs/utils"
+	"github.com/adharshmk96/fitsphere-be/libs/stk/utils"
 )
 
 // userService describes the internal structure of this service

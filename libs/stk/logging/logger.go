@@ -1,4 +1,4 @@
-package stk_logging
+package logging
 
 import (
 	"encoding/json"

@@ -46,16 +46,11 @@ if err != nil {
 }
 */
 func VerifyPassword(storedHash, storedSalt, password string) (bool, error) {
-	hash, err := base64.RawStdEncoding.DecodeString(storedHash)
-	if err != nil {
-		return false, err
-	}
-
 	salt, err := base64.RawStdEncoding.DecodeString(storedSalt)
 	if err != nil {
 		return false, err
 	}
 
 	newHash, _ := HashPassword(password, salt)
-	return reflect.DeepEqual(hash, newHash), nil
+	return reflect.DeepEqual(storedHash, newHash), nil
 }

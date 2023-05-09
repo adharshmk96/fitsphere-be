@@ -5,7 +5,7 @@ import (
 
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/entities"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/interfaces"
-	"github.com/adharshmk96/fitsphere-be/libs/stk/stk_logging"
+	"github.com/adharshmk96/fitsphere-be/libs/stk/logging"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
@@ -16,7 +16,7 @@ type UserRepository struct {
 }
 
 func NewUserRepository(pool *pgxpool.Pool) interfaces.UserRepository {
-	logger := stk_logging.GetLogger()
+	logger := logging.GetLogger()
 	return &UserRepository{
 		DBpool: pool,
 		logger: logger,
@@ -45,7 +45,7 @@ func (ur *UserRepository) GetUserByID(id entities.UserID) (*entities.UserAccount
 		"SELECT * FROM "+FITSPHERE_PUBLIC_USER_ACCOUNT_TAB+" WHERE id = $1", id,
 	).Scan(&user)
 	if err != nil {
-		return &user, err
+		return nil, err
 	}
 	return &user, nil
 }

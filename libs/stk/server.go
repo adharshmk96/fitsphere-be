@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/adharshmk96/fitsphere-be/libs/stk/stk_logging"
+	"github.com/adharshmk96/fitsphere-be/libs/stk/logging"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 )
@@ -81,7 +81,7 @@ func (s *Server) Patch(path string, handler HandlerFunc) {
 // and also to log the incoming request
 func wrapHandlerFunc(handler HandlerFunc, config *ServerConfig) httprouter.Handle {
 
-	logger := stk_logging.GetLogger()
+	logger := logging.GetLogger()
 
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
