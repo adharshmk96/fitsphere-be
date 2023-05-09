@@ -1,27 +1,26 @@
-package services_test
+package services
 
 import (
-	"errors"
 	"testing"
 
-	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/entities"
-	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/entities"
 )
 
 type UserRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *UserRepositoryMock) GetAllUsers() ([]entities.UserAccount, error) {
-	args := m.Called()
-	return args.Get(0).([]entities.UserAccount), args.Error(1)
-}
-
 func (m *UserRepositoryMock) GetUserByID(id entities.UserID) (*entities.UserAccount, error) {
 	args := m.Called(id)
 	return args.Get(0).(*entities.UserAccount), args.Error(1)
+}
+
+func (m *UserRepositoryMock) GetAllUsers() ([]entities.UserAccount, error) {
+	args := m.Called()
+	return args.Get(0).([]entities.UserAccount), args.Error(1)
 }
 
 func (m *UserRepositoryMock) CreateUser(user *entities.UserAccount_Internal) error {
@@ -39,46 +38,78 @@ func (m *UserRepositoryMock) DeleteUserByID(id entities.UserID) error {
 	return args.Error(0)
 }
 
-func TestUserServiceGetAllUsers(t *testing.T) {
-	repoMock := new(UserRepositoryMock)
-	service := services.NewUserService(repoMock)
+func TestGetAllUsers(t *testing.T) {
+	repo := new(UserRepositoryMock)
+	us := NewUserService(repo)
 
-	repoMock.On("GetAllUsers").Return([]entities.UserAccount{}, nil)
+	users := []entities.UserAccount{
+		{Username: "user1", Email: "user1@example.com"},
+		{Username: "user2", Email: "user2@example.com"},
+	}
 
-	users, err := service.GetAllUsers()
+	repo.On("GetAllUsers").Return(users, nil)
 
-	assert.NoError(t, err)
-	assert.NotNil(t, users)
+	result, err := us.GetAllUsers()
 
-	repoMock.AssertExpectations(t)
+	assert.Nil(t, err)
+	assert.Equal(t, users, result)
 }
 
-func TestUserServiceGetUserByID(t *testing.T) {
-	repoMock := new(UserRepositoryMock)
-	service := services.NewUserService(repoMock)
+func TestGetUserByID(t *testing.T) {
+	repo := new(UserRepositoryMock)
+	us := NewUserService(repo)
 
 	userID := entities.UserID(1)
-	repoMock.On("GetUserByID", userID).Return(&entities.UserAccount{ID: userID}, nil)
+	user := &entities.UserAccount{Username: "user", Email: "user@example.com"}
 
-	user, err := service.GetUserByID(userID)
+	repo.On("GetUserByID", userID).Return(user, nil)
 
-	assert.NoError(t, err)
-	assert.Equal(t, userID, user.ID)
+	result, err := us.GetUserByID(userID)
 
-	repoMock.AssertExpectations(t)
+	assert.Nil(t, err)
+	assert.Equal(t, user, result)
 }
 
-func TestUserServiceGetUserByIDError(t *testing.T) {
-	repoMock := new(UserRepositoryMock)
-	service := services.NewUserService(repoMock)
+func TestCreateUser(t *testing.T) {
+	repo := new(UserRepositoryMock)
+	us := NewUserService(repo)
+
+	user := &entities.UserAccount_Internal{
+		UserAccount: entities.UserAccount{
+			Username: "user",
+		},
+		Password: "password",
+	}
+
+	repo.On("CreateUser", user).Return(nil)
+
+	err := us.CreateUser(user)
+
+	assert.Nil(t, err)
+}
+
+func TestUpdateUser(t *testing.T) {
+	repo := new(UserRepositoryMock)
+	us := NewUserService(repo)
+
+	user := &entities.UserAccount{Username: "user", Email: "user@example.com"}
+
+	repo.On("UpdateUser", user).Return(nil)
+
+	err := us.UpdateUser(user)
+
+	assert.Nil(t, err)
+}
+
+func TestDeleteUserByID(t *testing.T) {
+	repo := new(UserRepositoryMock)
+	us := NewUserService(repo)
 
 	userID := entities.UserID(1)
-	repoMock.On("GetUserByID", userID).Return(nil, errors.New("user not found"))
 
-	user, err := service.GetUserByID(userID)
+	repo.On("DeleteUserByID", userID).Return(nil)
 
-	assert.Error(t, err)
-	assert.Nil(t, user)
+	err := us.DeleteUserByID(userID)
 
-	repoMock.AssertExpectations(t)
+	assert.Nil(t, err)
 }

@@ -36,7 +36,7 @@ func (c *Context) JSONResponse(data interface{}) {
 	// Check if there is an error in marshalling the JSON (internal server error)
 	if err != nil {
 		c.ResponseStatus = http.StatusInternalServerError
-		c.Writer.Write([]byte(ErrInternalServer.Error()))
+		http.Error(c.Writer, ErrInternalServer.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -52,8 +52,17 @@ func (c *Context) GetQueryParam(key string) string {
 }
 
 func (c *Context) DecodeJSONBody(v interface{}) error {
+	bodySizeLimit := int64(1 << 20) // 1 MB
+
 	// Set a maximum limit for the request body size to avoid possible malicious requests
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1<<20)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, bodySizeLimit)
+
+	// Manually check if the request body size exceeds the limit
+	if c.Request.ContentLength > bodySizeLimit {
+		c.Writer.Header().Set("Content-Type", "application/json")
+		http.Error(c.Writer, ErrBodyTooLarge.Error(), http.StatusRequestEntityTooLarge)
+		return ErrBodyTooLarge
+	}
 
 	// Decode the JSON body into the provided interface
 	decoder := json.NewDecoder(c.Request.Body)
