@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/config"
-	"github.com/adharshmk96/fitsphere-be/libs/db"
+	"github.com/adharshmk96/fitsphere-be/libs/stk/db"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -13,29 +13,18 @@ var (
 func init() {
 	var err error
 
-	connection, err = connectToPostgres()
+	host := config.Get().PG_HOST
+	port := config.Get().PG_PORT
+	user := config.Get().PG_USER
+	password := config.Get().PG_PASSWORD
+	database := config.Get().PG_DATABASE
+
+	pgDatabase := db.NewPGDatabase(host, port, user, password, database)
+	connection, err = pgDatabase.GetPGPool()
 
 	if err != nil {
 		panic("error connecting to database")
 	}
-}
-
-func connectToPostgres() (*pgxpool.Pool, error) {
-	err := db.Connect(
-		config.Get().PG_HOST,
-		config.Get().PG_PORT,
-		config.Get().PG_USER,
-		config.Get().PG_PASSWORD,
-		config.Get().PG_DATABASE,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	connection := db.GetDBPool()
-
-	return connection, nil
 }
 
 func GetPostgresConnection() *pgxpool.Pool {
