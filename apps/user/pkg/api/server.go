@@ -11,18 +11,19 @@ func NewServer(
 	logger *zap.Logger,
 ) (*stk.Server, error) {
 
-	logger.Info("Initializing database connection...")
+	logger.Info("initializing database connection...")
 	connection := client.GetPostgresConnection()
 
-	logger.Info("Initializing server...")
+	logger.Info("initializing server...")
 	config := &stk.ServerConfig{
 		Port:           "8080",
 		RequestLogging: true,
 		CORS:           true,
+		Logger:         logger,
 	}
 	server := stk.NewServer(config)
 
-	logger.Info("Binding routes...")
+	logger.Info("binding routes...")
 	initializer.BindUserRoutes(server, connection)
 
 	return server, nil

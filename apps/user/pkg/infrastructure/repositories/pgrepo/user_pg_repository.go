@@ -1,11 +1,11 @@
-package repositories
+package pgrepo
 
 import (
 	"context"
 
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/entities"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/interfaces"
-	"github.com/adharshmk96/stk/logging"
+	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/logging"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )

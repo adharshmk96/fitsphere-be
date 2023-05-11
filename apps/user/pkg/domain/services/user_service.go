@@ -3,17 +3,24 @@ package services
 import (
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/entities"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/interfaces"
+	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/logging"
 	"github.com/adharshmk96/stk/utils"
+	"go.uber.org/zap"
 )
 
 // userService describes the internal structure of this service
 type userService struct {
 	repo interfaces.UserRepository
+	logger *zap.Logger
 }
 
 // NewUserService creates a new UserService with the given UserRepository
 func NewUserService(repo interfaces.UserRepository) interfaces.UserService {
-	return &userService{repo: repo}
+	logger := logging.GetLogger()
+	return &userService{
+		repo: repo,
+		logger: logger,
+	}
 }
 
 // GetAllUsers retrieves all users

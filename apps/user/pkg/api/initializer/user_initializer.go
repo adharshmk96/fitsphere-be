@@ -3,14 +3,14 @@ package initializer
 import (
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/api/handlers"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/services"
-	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/repositories"
+	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/repositories/pgrepo"
 	"github.com/adharshmk96/stk"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 func BindUserRoutes(server *stk.Server, connection *pgxpool.Pool) {
 
-	user_repository := repositories.NewUserRepository(connection)
+	user_repository := pgrepo.NewUserRepository(connection)
 	user_service := services.NewUserService(user_repository)
 	user_handler := handlers.NewUserHandler(user_service)
 

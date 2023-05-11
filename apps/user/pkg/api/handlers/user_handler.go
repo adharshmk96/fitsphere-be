@@ -31,6 +31,7 @@ func (h *UserHandler) GetAllUsers(c *stk.Context) {
 	c.Logger.Info("Returning all users")
 	c.Status(http.StatusOK).JSONResponse(users)
 }
+
 func (h *UserHandler) GetUserByID(c *stk.Context) {
 
 	idStr := c.GetParam("id")

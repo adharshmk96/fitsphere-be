@@ -1,4 +1,4 @@
-package repositories
+package pgrepo
 
 const FITSPHERE_PUBLIC_USER_ACCOUNT_TAB = "fitsphere_public_user_account"
 
