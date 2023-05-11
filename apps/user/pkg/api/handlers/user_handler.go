@@ -23,8 +23,7 @@ func (h *UserHandler) GetAllUsers(c *stk.Context) {
 	users, err := h.service.GetAllUsers()
 	if err != nil {
 		c.Logger.Error("Error getting all users", zap.Error(err))
-		c.Writer.WriteHeader(http.StatusInternalServerError)
-		c.Writer.Write([]byte(err.Error()))
+		c.Status(http.StatusInternalServerError).JSONResponse(err.Error())
 		return
 	}
 
