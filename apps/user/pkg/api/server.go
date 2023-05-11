@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/api/initializer"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/client"
-	"github.com/adharshmk96/fitsphere-be/libs/stk"
+	"github.com/adharshmk96/stk"
 	"go.uber.org/zap"
 )
 

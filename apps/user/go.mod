@@ -3,8 +3,7 @@ module github.com/adharshmk96/fitsphere-be/apps/user
 go 1.20
 
 require (
-	github.com/adharshmk96/fitsphere-be/libs v0.0.0-20230412161527-1cee2cffd000
-	github.com/gorilla/mux v1.8.0
+	github.com/adharshmk96/stk v0.0.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/stretchr/testify v1.8.1
 	go.uber.org/zap v1.13.0

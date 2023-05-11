@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/api"
-	"github.com/adharshmk96/fitsphere-be/libs/stk/logging"
+	"github.com/adharshmk96/stk/logging"
 )
 
 func main() {

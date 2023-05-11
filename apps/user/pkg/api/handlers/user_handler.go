@@ -5,7 +5,7 @@ import (
 
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/entities"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/interfaces"
-	"github.com/adharshmk96/fitsphere-be/libs/stk"
+	"github.com/adharshmk96/stk"
 	"go.uber.org/zap"
 )
 

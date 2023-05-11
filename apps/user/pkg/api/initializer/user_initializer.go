@@ -4,7 +4,7 @@ import (
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/api/handlers"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/domain/services"
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/repositories"
-	"github.com/adharshmk96/fitsphere-be/libs/stk"
+	"github.com/adharshmk96/stk"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 

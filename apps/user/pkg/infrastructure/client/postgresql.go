@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/adharshmk96/fitsphere-be/apps/user/pkg/infrastructure/config"
-	"github.com/adharshmk96/fitsphere-be/libs/stk/db"
+	"github.com/adharshmk96/stk/db"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
